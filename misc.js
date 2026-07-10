@@ -118,3 +118,74 @@ MISC.checkScreen = function (options, header, message) {
     }
     return strScreen;
 }
+
+
+/**
+ * Executes a command that starts an asynchronous process and waits until
+ * the process appears to have changed the window/context.
+ *
+ * Strategy: build a snapshot string from a set of variables (P3GPP, scr,
+ * P3GPR, P3GSE, P3GUK, plus optional extra variables and windowID) and
+ * optionally messages/status. Poll until the snapshot changes or timeout.
+ *
+ * @param {string} cmd - command string to send to the active window (e.g. "\\do-something")
+ * @param {object} options - optional parameters:
+ *    timeout (ms, default 30000),
+ *    pollInterval (ms, default 200),
+ *    useMessages (bool, default true),
+ *    extraVars (array of variable names to include in snapshot)
+ * @return {boolean} true if snapshot changed before timeout, false otherwise
+ */
+MISC.wait = function (cmd, options) {
+    options = options || {};
+    var timeout = (options.timeout !== undefined) ? options.timeout : 30000;
+    var pollInterval = (options.pollInterval !== undefined) ? options.pollInterval : 200;
+    var useMessages = (options.useMessages !== undefined) ? options.useMessages : true;
+    var extraVars = Array.isArray(options.extraVars) ? options.extraVars : [];
+
+    var aw = activeWindow;
+    var windowID = '';
+    try { windowID = (aw.windowID || ''); } catch (e) { windowID = ''; }
+
+    function snapshot() {
+        var parts = [];
+        parts.push(aw.getVariable('P3GPP'));
+        parts.push(aw.getVariable('scr'));
+        parts.push(aw.getVariable('P3GPR'));
+        parts.push(aw.getVariable('P3GSE'));
+        parts.push(aw.getVariable('P3GUK'));
+        for (var i = 0; i < extraVars.length; i++) parts.push(aw.getVariable(extraVars[i]));
+        parts.push(windowID);
+        try {
+            var msgs = application.utility.messages();
+            parts.push(String(msgs.count));
+            if (msgs.count > 0) {
+                var lastMsg = msgs.item(msgs.count - 1);
+                parts.push(String(lastMsg.text || ''));
+            }
+        } catch (e) {}
+        try { parts.push((aw.status || '')); } catch (e) {}
+        try { parts.push(String(aw.getLastCommand())); } catch (e) {}
+        return parts.join('|');
+    }
+
+    var before = snapshot();
+    try {
+        aw.command(cmd, false);
+    } catch (e) {
+        return false;
+    }
+
+    var start = (new Date()).getTime();
+    while (true) {
+        var now = (new Date()).getTime();
+        if (now - start > timeout) return false;
+        var after = snapshot();
+        if (after !== before) return true;
+        // WinIBW does not provide WScript; use a short busy-wait instead
+        var t0 = (new Date()).getTime();
+        while ((new Date()).getTime() - t0 < pollInterval) {}
+    }
+};
+
+
