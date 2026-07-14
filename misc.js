@@ -4,6 +4,7 @@ if(typeof Array.isArray!=='function'){Array.isArray=function(e){return"[object A
 var MISC = {
     _format: null
 };
+var Notify;
 
 /**
  * Gets or sets the current record format
@@ -23,7 +24,7 @@ MISC.format = function (f) {
         this._format = v;
         return this._format;
     }
-    activeWindow.command('s ' + f, false);
+    MISC.wait('s ' + f, false);
     this._format = f.toUpperCase();
     return this._format;
 }
@@ -138,6 +139,7 @@ MISC.checkScreen = function (options, header, message) {
  * @return {boolean} true if snapshot changed before timeout, false otherwise
  */
 MISC.wait = function (cmd, newWindow, options) {
+    alert(cmd);
     options = options || {};
     var timeout = (options.timeout !== undefined) ? options.timeout : 30000;
     var pollInterval = (options.pollInterval !== undefined) ? options.pollInterval : 200;
@@ -158,7 +160,7 @@ MISC.wait = function (cmd, newWindow, options) {
         for (var i = 0; i < extraVars.length; i++) parts.push(aw.getVariable(extraVars[i]));
         parts.push(windowID);
         try {
-            var msgs = application.utility.messages();
+            var msgs = utility.messages();
             parts.push(String(msgs.count));
             if (msgs.count > 0) {
                 var lastMsg = msgs.item(msgs.count - 1);
