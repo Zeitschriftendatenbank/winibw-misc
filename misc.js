@@ -139,7 +139,6 @@ MISC.checkScreen = function (options, header, message) {
  * @return {boolean} true if snapshot changed before timeout, false otherwise
  */
 MISC.wait = function (cmd, newWindow, options) {
-    alert(cmd);
     options = options || {};
     var timeout = (options.timeout !== undefined) ? options.timeout : 30000;
     var pollInterval = (options.pollInterval !== undefined) ? options.pollInterval : 200;
