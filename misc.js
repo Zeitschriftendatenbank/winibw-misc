@@ -129,6 +129,7 @@ MISC.checkScreen = function (options, header, message) {
  * optionally messages/status. Poll until the snapshot changes or timeout.
  *
  * @param {string} cmd - command string to send to the active window (e.g. "\\do-something")
+ * @param {boolean} newWindow - whether to open the command in a new window (optional, default false)
  * @param {object} options - optional parameters:
  *    timeout (ms, default 30000),
  *    pollInterval (ms, default 200),
@@ -136,7 +137,7 @@ MISC.checkScreen = function (options, header, message) {
  *    extraVars (array of variable names to include in snapshot)
  * @return {boolean} true if snapshot changed before timeout, false otherwise
  */
-MISC.wait = function (cmd, options) {
+MISC.wait = function (cmd, newWindow, options) {
     options = options || {};
     var timeout = (options.timeout !== undefined) ? options.timeout : 30000;
     var pollInterval = (options.pollInterval !== undefined) ? options.pollInterval : 200;
@@ -171,7 +172,8 @@ MISC.wait = function (cmd, options) {
 
     var before = snapshot();
     try {
-        aw.command(cmd, false);
+        var useNewWindow = !!newWindow;
+        aw.command(cmd, useNewWindow);
     } catch (e) {
         return false;
     }
