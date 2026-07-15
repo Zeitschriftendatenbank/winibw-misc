@@ -1,3 +1,5 @@
+var TestRunner, MISC, Notify;
+
 TestRunner.add("misc_format_get", function() {
 	// request running under Lesekennung if needed
 	if (!TestRunner.runWithKennung('6098', '\\ZOE tit cinema', 'misc_format_get')) return;
@@ -68,3 +70,49 @@ TestRunner.add("misc_wait", function() {
     } catch (e) {}
     return ok;
 });
+
+// Test for MISC.arrayDiff: removes elements of a2 from a1 in-place
+TestRunner.add("misc_arrayDiff", function() {
+	var a1 = [1,2,3,4];
+	MISC.arrayDiff(a1, [2,4]);
+	TestRunner.assert(MISC.arrayEqual(a1, [1,3]), 'arrayDiff should remove matching elements');
+
+	var a2 = [1,2,2,3,2];
+	MISC.arrayDiff(a2, [2]);
+	TestRunner.assert(MISC.arrayEqual(a2, [1,3]), 'arrayDiff should remove all duplicates of value');
+
+	var a3 = ['a','b','c'];
+	MISC.arrayDiff(a3, ['x','y']);
+	TestRunner.assert(MISC.arrayEqual(a3, ['a','b','c']), 'arrayDiff should leave array unchanged when no matches');
+
+	var a4 = [5,5,5];
+	MISC.arrayDiff(a4, [5]);
+	TestRunner.assert(MISC.arrayEqual(a4, []), 'arrayDiff should remove all matching elements');
+});
+
+// Test for MISC.arrayEqual: equality checks
+TestRunner.add("misc_arrayEqual", function() {
+	TestRunner.assert(MISC.arrayEqual([1,2,3], [1,2,3]), 'arrayEqual should return true for identical arrays');
+	TestRunner.assert(!MISC.arrayEqual([1,2], [1,2,3]), 'arrayEqual should return false for different lengths');
+	TestRunner.assert(!MISC.arrayEqual([1,2,3], [3,2,1]), 'arrayEqual should consider order');
+	TestRunner.assert(!MISC.arrayEqual(null, [1]), 'arrayEqual should return false when first arg is null');
+	TestRunner.assert(!MISC.arrayEqual([1], null), 'arrayEqual should return false when second arg is null');
+	return true;
+});
+
+// Test for MISC.arrayUnique: returns new array with first-occurrence unique values
+TestRunner.add("misc_arrayUnique", function() {
+	var u1 = MISC.arrayUnique([1,2,2,3,1]);
+	TestRunner.assert(MISC.arrayEqual(u1, [1,2,3]), 'arrayUnique should return [1,2,3] for [1,2,2,3,1]');
+
+	var u2 = MISC.arrayUnique(['a','b','a','c']);
+	TestRunner.assert(MISC.arrayEqual(u2, ['a','b','c']), 'arrayUnique should preserve first-occurrence order for strings');
+
+	var u3 = MISC.arrayUnique([]);
+	TestRunner.assert(MISC.arrayEqual(u3, []), 'arrayUnique should return [] for empty input');
+
+	var u4 = MISC.arrayUnique([5,5,5]);
+	TestRunner.assert(MISC.arrayEqual(u4, [5]), 'arrayUnique should collapse duplicates to single element');
+	return true;
+});
+
