@@ -166,22 +166,16 @@ MISC.wait = function (cmd, newWindow, options) {
     function snapshot() {
         var parts = [];
         parts.push(aw.getVariable('P3GPP'));
-        parts.push(aw.getVariable('scr'));
+        parts.push(aw.variable('scr'));
+        parts.push(aw.getVariable('P3GTM'));
         parts.push(aw.getVariable('P3GPR'));
         parts.push(aw.getVariable('P3GSE'));
+        parts.push(aw.getVariable('P3GSD'));
+        parts.push(aw.getVariable('P3GSY'));
+        parts.push(aw.getVariable('P3GBE'));
         parts.push(aw.getVariable('P3GUK'));
         for (var i = 0; i < extraVars.length; i++) parts.push(aw.getVariable(extraVars[i]));
         parts.push(windowID);
-        try {
-            var msgs = utility.messages();
-            parts.push(String(msgs.count));
-            if (msgs.count > 0) {
-                var lastMsg = msgs.item(msgs.count - 1);
-                parts.push(String(lastMsg.text || ''));
-            }
-        } catch (e) { }
-        try { parts.push((aw.status || '')); } catch (e) { }
-        try { parts.push(String(aw.getLastCommand())); } catch (e) { }
         return parts.join('|');
     }
 
@@ -198,6 +192,7 @@ MISC.wait = function (cmd, newWindow, options) {
         var now = (new Date()).getTime();
         if (now - start > timeout) return false;
         var after = snapshot();
+        //Notify.info("\n" + before + "\n" + after);
         if (after !== before) return true;
         // WinIBW does not provide WScript; use a short busy-wait instead
         var t0 = (new Date()).getTime();
@@ -370,4 +365,11 @@ MISC.getExpansionFromP3VTX = function (p3vtx) {
         .replace(/\u001b./g, ''); // replace /n (Zeilenumbruch) entfernt,
     // weil hier die $8 Expansion durch Zeilenbruch abgetrennt wurde
     return MISC.unescapeHtml(satz);
+}
+
+// ES3-safe helper: add String.prototype.trim if not present
+if (!String.prototype.trim) {
+    String.prototype.trim = function () {
+        return this.replace(/^\s+|\s+$/g, '');
+    };
 }
