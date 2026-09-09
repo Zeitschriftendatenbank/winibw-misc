@@ -2,19 +2,20 @@ var TestRunner, MISC, Notify;
 
 TestRunner.add("misc_format_get", function() {
 	// request running under Lesekennung if needed
-	if (!TestRunner.runWithKennung('6098', '\\ZOE tit cinema', 'misc_format_get')) return;
-	MISC._format = null;
+	if (!TestRunner.runWithKennung('pica3://ibw0.dnb.de:1042', '6098', '\\ZOE tit cinema', 'misc_format_get')) return false;
+	MISC.wait('\\TOO D', false);
 	var globalP3GPR = activeWindow.getVariable('P3GPR');
+	Notify.info('globalP3GPR: ' + globalP3GPR);
 	var res = MISC.format();
-	TestRunner.assertEqual(res.toUpperCase(), globalP3GPR.toUpperCase(), 'format sollte den gleichen Wert wie P3GPR haben');
+	Notify.info('MISC.format(): ' + res);
+	TestRunner.assertEqual(res, globalP3GPR.toUpperCase(), 'format sollte den gleichen Wert wie P3GPR haben');
 });
 
 /**
  * This test might fail because its call a asynchronous command to set the format, and the test might continue before the command is finished.
  */
 TestRunner.add("misc_format_set", function() {
-	if (!TestRunner.runWithKennung('6098', '\\ZOE tit cinema', 'misc_format_set')) return;
-	MISC._format = null;
+	if (!TestRunner.runWithKennung('pica3://ibw0.dnb.de:1042', '6098', '\\ZOE tit cinema', 'misc_format_set')) return false;
 	MISC.format('P');
 	Notify.info('MISC.format set to P');
 	var globalP3GPR = activeWindow.getVariable('P3GPR');
@@ -46,13 +47,13 @@ TestRunner.add("misc_unescapeHtml_numeric", function() {
 });
 
 TestRunner.add("misc_checkScreen_positive", function() {
-	if (!TestRunner.runWithKennung('6098', '\\ZOE tit cinema', 'misc_checkScreen_positive')) return;
+	if (!TestRunner.runWithKennung('pica3://ibw0.dnb.de:1042', '6098', '\\ZOE tit cinema', 'misc_checkScreen_positive')) return;
 	var res = MISC.checkScreen(['8A','7A','MT']);
 	TestRunner.assert(res !== false, 'MISC.checkScreen should return screen code when it matches options');
 });
 
 TestRunner.add("misc_checkScreen_negative", function() {
-	if (!TestRunner.runWithKennung('6098', '\\ZOE tit cinema', 'misc_checkScreen_negative')) return;
+	if (!TestRunner.runWithKennung('pica3://ibw0.dnb.de:1042', '6098', '\\ZOE tit cinema', 'misc_checkScreen_negative')) return;
 	var res = MISC.checkScreen(['00'], 'misc_checkScreen_negative', 'should only run on login screen');
 	TestRunner.assert(res === false, 'MISC.checkScreen should return false for non-matching screens');
 });
@@ -61,15 +62,15 @@ TestRunner.add("misc_checkScreen_negative", function() {
  * Simple test wrapper to demonstrate usage. Adjust the command and options
  * when calling in real scripts.
  */
-TestRunner.add("misc_wait", function() {
-    var cmd = '\\ZOE tit cine*'; // replace with real command
-    var ok = MISC.wait(cmd, { timeout: 60000, pollInterval: 250 });
-    try {
-        if (ok) application.activeWindow.appendMessage('misc.wait: finished', 3);
-        else application.activeWindow.appendMessage('misc.wait: timeout/failure', 1);
-    } catch (e) {}
-    return ok;
+TestRunner.add("misc_wait_cmd", function() {
+    var cmd = 's p';
+	var format = MISC.format();
+	MISC.format('D');
+    MISC.wait(cmd, { timeout: 60000, pollInterval: 250 });
+	alert(MISC.format());
+    TestRunner.assert('P' == MISC.format(), 'MISC.format should return "P" after command');
 });
+
 
 // Test for MISC.arrayDiff: removes elements of a2 from a1 in-place
 TestRunner.add("misc_arrayDiff", function() {
