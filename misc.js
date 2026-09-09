@@ -15,9 +15,7 @@ if (!Array.prototype.unique) {
     };
 }
 
-var MISC = {
-    _format: null
-};
+var MISC = {};
 var Notify;
 
 /**
@@ -26,21 +24,25 @@ var Notify;
  * @return {string} Current format in uppercase
  */
 MISC.format = function (f) {
-    if (typeof f === 'undefined' || f === null) {
-        if (this._format) return this._format;
-        var v = activeWindow.getVariable('P3GPR');
-        if (v) {
-            v = v.toUpperCase();
+    if (typeof f === 'string' && f !== '') {
+        f = f.toUpperCase();
+        if (-1 !== 'P|D|PA|DA'.indexOf(f)) {
+            if (activeWindow.getVariable('P3GPR') === f) {
+                return f;
+            } else {
+                activeWindow.setVariable('P3GPR', f);
+                //MISC.wait('\\TOO ' + f);
+                activeWindow.command('\\TOO ' + f);
+                //MISC.wait('\\TOO ' + f);
+                //alert('Format changed to ' + f + ', current P3GPR=' + activeWindow.getVariable('P3GPR'));
+                return true;
+            }
         } else {
-            v = activeWindow.getVariable('P3GDB');
-            if (v) v = v.toUpperCase();
+            Notify.error('MISC.format: invalid format "' + f + '"');
         }
-        this._format = v;
-        return this._format;
+    } else {
+        return activeWindow.getVariable('P3GPR').toUpperCase();
     }
-    MISC.wait('s ' + f, false);
-    this._format = f.toUpperCase();
-    return this._format;
 }
 
 
@@ -111,11 +113,20 @@ MISC.checkScreen = function (options, header, message) {
         'SC': 'Indexansicht',
         'FI': 'Datenbankinfo',
         'FS': 'Bestandsauswahl',
-        'MI': 'Norm-Korrekturmodus'
+        'MI': 'Norm-Korrekturmodus',
+        'Z3': 'Suchschirm',
+        'HK': 'Hilfe',
+        'XX': 'Unbekannte Maske'
     };
-    var strScreen = activeWindow.getVariable('scr');
-    if (!strScreen) {
-        strScreen = 'XX'; // assume login screen if scr is empty
+    var strScreen = activeWindow.variable('scr') || activeWindow.getVariable('scr') || '';
+    //alert('checkScreen: strScreen=' + strScreen + ', options=' + (options ? options.join(', ') : 'none'));
+    if ('' == strScreen) {
+        strScreen = 'XX'; // z.B. vor dem LogIn
+    }
+    if (typeof options === 'undefined' || options === null) {
+        return strScreen;
+    } else if (!Array.isArray(options)) {
+        return (map[options]) ? map[options] : false;
     }
     var opt = options.join('#');
     if (opt.indexOf(strScreen) < 0) {
@@ -126,79 +137,14 @@ MISC.checkScreen = function (options, header, message) {
         }
         var list = arr.join(', ');
         if (typeof header !== 'undefined') {
-            message = message || 'Die Funktion kann nur aus ' + list + ' aufgerufen werden.';
-            Notify.error(message);
+            message = message || 'Die Funktion kann nur aus ' + list + ' aufgerufen werden. Aktueller Screen: ' + strScreen + ' (' + (map[strScreen] || 'Unbekannte Maske') + ')';
+            Notify.popup(message, 'checkScreen', 'error');
         }
         return false;
     }
     return strScreen;
 }
 
-
-/**
- * Executes a command that starts an asynchronous process and waits until
- * the process appears to have changed the window/context.
- *
- * Strategy: build a snapshot string from a set of variables (P3GPP, scr,
- * P3GPR, P3GSE, P3GUK, plus optional extra variables and windowID) and
- * optionally messages/status. Poll until the snapshot changes or timeout.
- *
- * @param {string} cmd - command string to send to the active window (e.g. "\\do-something")
- * @param {boolean} newWindow - whether to open the command in a new window (optional, default false)
- * @param {object} options - optional parameters:
- *    timeout (ms, default 30000),
- *    pollInterval (ms, default 200),
- *    useMessages (bool, default true),
- *    extraVars (array of variable names to include in snapshot)
- * @return {boolean} true if snapshot changed before timeout, false otherwise
- */
-MISC.wait = function (cmd, newWindow, options) {
-    options = options || {};
-    var timeout = (options.timeout !== undefined) ? options.timeout : 30000;
-    var pollInterval = (options.pollInterval !== undefined) ? options.pollInterval : 200;
-    var useMessages = (options.useMessages !== undefined) ? options.useMessages : true;
-    var extraVars = Array.isArray(options.extraVars) ? options.extraVars : [];
-
-    var aw = activeWindow;
-    var windowID = '';
-    try { windowID = (aw.windowID || ''); } catch (e) { windowID = ''; }
-
-    function snapshot() {
-        var parts = [];
-        parts.push(aw.getVariable('P3GPP'));
-        parts.push(aw.variable('scr'));
-        parts.push(aw.getVariable('P3GTM'));
-        parts.push(aw.getVariable('P3GPR'));
-        parts.push(aw.getVariable('P3GSE'));
-        parts.push(aw.getVariable('P3GSD'));
-        parts.push(aw.getVariable('P3GSY'));
-        parts.push(aw.getVariable('P3GBE'));
-        parts.push(aw.getVariable('P3GUK'));
-        for (var i = 0; i < extraVars.length; i++) parts.push(aw.getVariable(extraVars[i]));
-        parts.push(windowID);
-        return parts.join('|');
-    }
-
-    var before = snapshot();
-    try {
-        var useNewWindow = !!newWindow;
-        aw.command(cmd, useNewWindow);
-    } catch (e) {
-        return false;
-    }
-
-    var start = (new Date()).getTime();
-    while (true) {
-        var now = (new Date()).getTime();
-        if (now - start > timeout) return false;
-        var after = snapshot();
-        //Notify.info("\n" + before + "\n" + after);
-        if (after !== before) return true;
-        // WinIBW does not provide WScript; use a short busy-wait instead
-        var t0 = (new Date()).getTime();
-        while ((new Date()).getTime() - t0 < pollInterval) { }
-    }
-}
 
 
 /**
