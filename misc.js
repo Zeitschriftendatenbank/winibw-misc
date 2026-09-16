@@ -15,8 +15,15 @@ if (!Array.prototype.unique) {
     };
 }
 
+// ES3-safe helper: add String.prototype.trim if not present
+if (!String.prototype.trim) {
+    String.prototype.trim = function () {
+        return this.replace(/^\s+|\s+$/g, '');
+    };
+}
+
 var MISC = {};
-var Notify;
+var Notify = Notify || {};
 
 /**
  * Gets or sets the current record format
@@ -313,9 +320,3 @@ MISC.getExpansionFromP3VTX = function (p3vtx) {
     return MISC.unescapeHtml(satz);
 }
 
-// ES3-safe helper: add String.prototype.trim if not present
-if (!String.prototype.trim) {
-    String.prototype.trim = function () {
-        return this.replace(/^\s+|\s+$/g, '');
-    };
-}
