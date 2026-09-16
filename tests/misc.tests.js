@@ -1,9 +1,9 @@
 var TestRunner, MISC, Notify;
 
-TestRunner.add("misc_format_get", function() {
+TestRunner.add("misc_format_get", function () {
 	// request running under Lesekennung if needed
 	if (!TestRunner.runWithKennung('pica3://ibw0.dnb.de:1042', '6098', '\\ZOE tit cinema', 'misc_format_get')) return false;
-	MISC.wait('\\TOO D', false);
+	activeWindow.command('\\TOO D');
 	var globalP3GPR = activeWindow.getVariable('P3GPR');
 	Notify.info('globalP3GPR: ' + globalP3GPR);
 	var res = MISC.format();
@@ -14,7 +14,7 @@ TestRunner.add("misc_format_get", function() {
 /**
  * This test might fail because its call a asynchronous command to set the format, and the test might continue before the command is finished.
  */
-TestRunner.add("misc_format_set", function() {
+TestRunner.add("misc_format_set", function () {
 	if (!TestRunner.runWithKennung('pica3://ibw0.dnb.de:1042', '6098', '\\ZOE tit cinema', 'misc_format_set')) return false;
 	MISC.format('P');
 	Notify.info('MISC.format set to P');
@@ -23,12 +23,12 @@ TestRunner.add("misc_format_set", function() {
 	MISC.format('D');
 });
 
-TestRunner.add("misc_unescapeHtml_named", function() {
+TestRunner.add("misc_unescapeHtml_named", function () {
 	var s = MISC.unescapeHtml("&amp;&lt;&gt;&quot;&#039;&nbsp;");
 	TestRunner.assert(s == "&<>\"' ", "MISC.unescapeHtml named entities mismatch");
 });
 
-TestRunner.add("misc_unescapeHtml_numeric", function() {
+TestRunner.add("misc_unescapeHtml_numeric", function () {
 	// basic ASCII via decimal and hex
 	TestRunner.assert(MISC.unescapeHtml("&#65;") == "A", "decimal numeric entity failed");
 	TestRunner.assert(MISC.unescapeHtml("&#x41;") == "A", "hex numeric entity failed");
@@ -46,13 +46,13 @@ TestRunner.add("misc_unescapeHtml_numeric", function() {
 	TestRunner.assert(ok, "high codepoint numeric entity failed");
 });
 
-TestRunner.add("misc_checkScreen_positive", function() {
+TestRunner.add("misc_checkScreen_positive", function () {
 	if (!TestRunner.runWithKennung('pica3://ibw0.dnb.de:1042', '6098', '\\ZOE tit cinema', 'misc_checkScreen_positive')) return;
-	var res = MISC.checkScreen(['8A','7A','MT']);
+	var res = MISC.checkScreen(['8A', '7A', 'MT']);
 	TestRunner.assert(res !== false, 'MISC.checkScreen should return screen code when it matches options');
 });
 
-TestRunner.add("misc_checkScreen_negative", function() {
+TestRunner.add("misc_checkScreen_negative", function () {
 	if (!TestRunner.runWithKennung('pica3://ibw0.dnb.de:1042', '6098', '\\ZOE tit cinema', 'misc_checkScreen_negative')) return;
 	var res = MISC.checkScreen(['00'], 'misc_checkScreen_negative', 'should only run on login screen');
 	TestRunner.assert(res === false, 'MISC.checkScreen should return false for non-matching screens');
@@ -62,58 +62,57 @@ TestRunner.add("misc_checkScreen_negative", function() {
  * Simple test wrapper to demonstrate usage. Adjust the command and options
  * when calling in real scripts.
  */
-TestRunner.add("misc_wait_cmd", function() {
-    var cmd = 's p';
+TestRunner.add("misc_wait_cmd", function () {
+	var cmd = 's p';
 	var format = MISC.format();
 	MISC.format('D');
-    MISC.wait(cmd, { timeout: 60000, pollInterval: 250 });
+	WAIT.wait(cmd, { timeout: 60000, pollInterval: 250 });
 	alert(MISC.format());
-    TestRunner.assert('P' == MISC.format(), 'MISC.format should return "P" after command');
+	TestRunner.assert('P' == MISC.format(), 'MISC.format should return "P" after command');
 });
 
 
 // Test for MISC.arrayDiff: removes elements of a2 from a1 in-place
-TestRunner.add("misc_arrayDiff", function() {
-	var a1 = [1,2,3,4];
-	MISC.arrayDiff(a1, [2,4]);
-	TestRunner.assert(MISC.arrayEqual(a1, [1,3]), 'arrayDiff should remove matching elements');
+TestRunner.add("misc_arrayDiff", function () {
+	var a1 = [1, 2, 3, 4];
+	MISC.arrayDiff(a1, [2, 4]);
+	TestRunner.assert(MISC.arrayEqual(a1, [1, 3]), 'arrayDiff should remove matching elements');
 
-	var a2 = [1,2,2,3,2];
+	var a2 = [1, 2, 2, 3, 2];
 	MISC.arrayDiff(a2, [2]);
-	TestRunner.assert(MISC.arrayEqual(a2, [1,3]), 'arrayDiff should remove all duplicates of value');
+	TestRunner.assert(MISC.arrayEqual(a2, [1, 3]), 'arrayDiff should remove all duplicates of value');
 
-	var a3 = ['a','b','c'];
-	MISC.arrayDiff(a3, ['x','y']);
-	TestRunner.assert(MISC.arrayEqual(a3, ['a','b','c']), 'arrayDiff should leave array unchanged when no matches');
+	var a3 = ['a', 'b', 'c'];
+	MISC.arrayDiff(a3, ['x', 'y']);
+	TestRunner.assert(MISC.arrayEqual(a3, ['a', 'b', 'c']), 'arrayDiff should leave array unchanged when no matches');
 
-	var a4 = [5,5,5];
+	var a4 = [5, 5, 5];
 	MISC.arrayDiff(a4, [5]);
 	TestRunner.assert(MISC.arrayEqual(a4, []), 'arrayDiff should remove all matching elements');
 });
 
 // Test for MISC.arrayEqual: equality checks
-TestRunner.add("misc_arrayEqual", function() {
-	TestRunner.assert(MISC.arrayEqual([1,2,3], [1,2,3]), 'arrayEqual should return true for identical arrays');
-	TestRunner.assert(!MISC.arrayEqual([1,2], [1,2,3]), 'arrayEqual should return false for different lengths');
-	TestRunner.assert(!MISC.arrayEqual([1,2,3], [3,2,1]), 'arrayEqual should consider order');
+TestRunner.add("misc_arrayEqual", function () {
+	TestRunner.assert(MISC.arrayEqual([1, 2, 3], [1, 2, 3]), 'arrayEqual should return true for identical arrays');
+	TestRunner.assert(!MISC.arrayEqual([1, 2], [1, 2, 3]), 'arrayEqual should return false for different lengths');
+	TestRunner.assert(!MISC.arrayEqual([1, 2, 3], [3, 2, 1]), 'arrayEqual should consider order');
 	TestRunner.assert(!MISC.arrayEqual(null, [1]), 'arrayEqual should return false when first arg is null');
 	TestRunner.assert(!MISC.arrayEqual([1], null), 'arrayEqual should return false when second arg is null');
 	return true;
 });
 
 // Test for MISC.arrayUnique: returns new array with first-occurrence unique values
-TestRunner.add("misc_arrayUnique", function() {
-	var u1 = MISC.arrayUnique([1,2,2,3,1]);
-	TestRunner.assert(MISC.arrayEqual(u1, [1,2,3]), 'arrayUnique should return [1,2,3] for [1,2,2,3,1]');
+TestRunner.add("misc_arrayUnique", function () {
+	var u1 = MISC.arrayUnique([1, 2, 2, 3, 1]);
+	TestRunner.assert(MISC.arrayEqual(u1, [1, 2, 3]), 'arrayUnique should return [1,2,3] for [1,2,2,3,1]');
 
-	var u2 = MISC.arrayUnique(['a','b','a','c']);
-	TestRunner.assert(MISC.arrayEqual(u2, ['a','b','c']), 'arrayUnique should preserve first-occurrence order for strings');
+	var u2 = MISC.arrayUnique(['a', 'b', 'a', 'c']);
+	TestRunner.assert(MISC.arrayEqual(u2, ['a', 'b', 'c']), 'arrayUnique should preserve first-occurrence order for strings');
 
 	var u3 = MISC.arrayUnique([]);
 	TestRunner.assert(MISC.arrayEqual(u3, []), 'arrayUnique should return [] for empty input');
 
-	var u4 = MISC.arrayUnique([5,5,5]);
+	var u4 = MISC.arrayUnique([5, 5, 5]);
 	TestRunner.assert(MISC.arrayEqual(u4, [5]), 'arrayUnique should collapse duplicates to single element');
 	return true;
 });
-
